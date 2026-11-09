@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>额度与路由 · 本机模型网关</title>
+  <link rel="stylesheet" href="/dashboard/styles.css">
+  <script src="/dashboard/app.js" defer></script>
+  <script src="/dashboard/usage.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <div id="dashboard">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          <div><p class="brand-title">额度与路由</p><p class="brand-subtitle">本机模型网关</p></div>
+        </div>
+        <div class="topbar-actions">
+          <span class="locale-label" title="界面语言">简体中文</span>
+          <button id="themeToggle" class="button quiet" type="button" aria-pressed="false"><span id="themeIcon" aria-hidden="true">☼</span><span id="themeLabel">浅色</span></button>
+          <span class="header-divider" aria-hidden="true"></span>
+          <p class="updated-label">最近更新 <time id="updatedAt">—</time></p>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="workspace" tabindex="-1">
+      <div class="page-heading">
+        <div><p class="eyebrow">工作台</p><h1>额度与模型用量</h1><p class="page-description">查看签到余额、模型消耗，以及每次请求使用的线路与账号。</p></div>
+        <div class="page-actions">
+          <div class="range-control" role="group" aria-label="统计时间范围">
+            <button class="range-button active" data-hours="4" aria-pressed="true" type="button">4 小时</button>
+            <button class="range-button" data-hours="24" aria-pressed="false" type="button">24 小时</button>
+            <button class="range-button" data-hours="168" aria-pressed="false" type="button">7 天</button>
+          </div>
+          <button id="refreshButton" class="button" type="button"><svg class="refresh-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M4 15l2 3a7 7 0 0 0 12-1"/></svg><span>刷新</span></button>
+          <button id="checkInButton" class="button primary" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6v4H9zM9 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3M8 14l3 3 5-6"/></svg><span>签到并刷新</span></button>
+        </div>
+      </div>
+
+      <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+      <div id="errorBanner" class="notice error" role="alert" hidden></div>
+
+      <div class="service-bar">
+        <span id="serviceStatus" class="status-pill neutral"><span class="status-dot" aria-hidden="true"></span>正在连接</span>
+        <span class="service-detail">默认模型 <strong id="defaultModel">—</strong></span>
+        <span class="service-detail">上游 <strong id="defaultUpstream">—</strong></span>
+        <span class="service-detail proxy-detail">代理 <strong id="proxyStatus">—</strong></span>
+      </div>
+
+      <section class="summary-grid" aria-label="余额与签到状态">
+        <article class="panel balance-panel">
+          <div class="section-heading"><h2 id="balanceTitle">已确认余额</h2><span class="unit-tag">USD</span></div>
+          <div id="totalBalance" class="balance-value pending">待查询</div>
+          <p id="balanceDescription" class="balance-description">完成签到后，汇总每个账号查询到的实际余额。</p>
+          <div class="balance-footer">
+            <div><span class="metric-label">余额已确认</span><strong id="confirmedAccounts">—</strong></div>
+            <div><span class="metric-label">可用路由账号</span><strong id="availableAccounts">—</strong></div>
+            <div><span class="metric-label">最近余额更新</span><strong id="balanceUpdatedAt">尚无记录</strong></div>
+          </div>
+        </article>
+        <article class="panel checkin-panel">
+          <div class="section-heading"><h2>签到状态</h2><span id="checkInBadge" class="badge neutral">尚未签到</span></div>
+          <p id="checkInState" class="checkin-state">等待首次签到</p>
+          <p id="checkInDescription" class="secondary-text">点击“签到并刷新”，完成后自动更新账号余额。</p>
+          <dl class="compact-details"><div><dt>最近完成</dt><dd id="lastCheckInAt">—</dd></div><div><dt>本次耗时</dt><dd id="checkInDuration">—</dd></div><div><dt>路由入口</dt><dd id="entrypoint" class="mono">—</dd></div></dl>
+        </article>
+      </section>
+
+      <section class="panel accounts-panel" aria-labelledby="accountsHeading">
+        <div class="panel-header"><div><h2 id="accountsHeading">账号明细 <span id="accountCount" class="count-badge">—</span></h2><p class="section-description">显示全部已存账号；“参与号池”开关决定模型请求使用哪些账号，自动签到单独管理。</p></div><label class="search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><span class="sr-only">搜索账号</span><input id="accountSearch" type="search" placeholder="搜索账号" autocomplete="off"></label></div>
+        <div class="table-scroll"><table class="accounts-table"><caption class="sr-only">账号的签到结果、实际余额、路由凭据状态和号池参与开关</caption><thead><tr><th scope="col">账号</th><th scope="col">签到 / 余额查询</th><th scope="col" class="numeric">确认余额 · USD</th><th scope="col" class="numeric">已用 · USD</th><th scope="col">路由凭据</th><th scope="col">参与号池</th><th scope="col">更新时间</th></tr></thead><tbody id="accountRows"><tr><td colspan="7" class="empty-cell">正在读取账号状态…</td></tr></tbody></table></div>
+        <p class="panel-footnote">停用后新请求使用其他启用账号，正在输出的请求会完成；依赖服务端历史的对话可能需要新开。未添加 API Key 的账号仍显示已查询余额；未查询或查询失败的余额不会计入总和。</p>
+      </section>
+
+      <section class="panel routing-panel" aria-labelledby="routingHeading">
+        <div class="panel-header"><div><h2 id="routingHeading">路由用量</h2><p id="metricScope" class="section-description">最近 4 小时 · 统一入口的实际请求记录</p></div><span class="subtle-tag">全部路由</span></div>
+        <div class="metrics-strip">
+          <div><span class="metric-label">请求总数</span><strong id="requestTotal">—</strong><span id="requestResults" class="metric-caption">暂无请求记录</span></div>
+          <div><span class="metric-label">成功率</span><strong id="successRate">—</strong><span class="metric-caption">包含上游回复失败与流中断</span></div>
+          <div><span class="metric-label">平均延迟</span><strong id="averageLatency">—</strong><span class="metric-caption">请求完成耗时</span></div>
+          <div><span class="metric-label">Token 总数</span><strong id="tokenTotal">—</strong><span id="tokenReported" class="metric-caption">暂无上游 usage</span></div>
+          <div><span class="metric-label">RPM</span><strong id="rpm">—</strong><span class="metric-caption">每分钟请求数</span></div>
+          <div><span class="metric-label">TPM</span><strong id="tpm">—</strong><span class="metric-caption">每分钟 Token 数</span></div>
+        </div>
+        <div class="timeline-section"><div class="subsection-heading"><h3>请求健康时间线</h3><div class="legend"><span><i class="legend-dot success"></i>成功</span><span><i class="legend-dot danger"></i>失败</span></div></div><div id="healthTimeline" class="health-timeline" role="img" aria-label="暂无请求记录"><p class="empty-inline">当前范围暂无请求记录</p></div><div class="timeline-axis"><span id="timelineStart">—</span><span id="timelineCaption">每格代表一条请求</span><span id="timelineEnd">—</span></div></div>
+        <div class="routing-charts">
+          <div class="requests-chart-panel"><div class="subsection-heading"><h3>请求与 Token 趋势</h3><div class="range-control chart-mode" role="group" aria-label="趋势指标"><button class="range-button active" data-chart-metric="requests" aria-pressed="true" type="button">请求</button><button class="range-button" data-chart-metric="tokens" aria-pressed="false" type="button" disabled>Token</button></div></div><div id="requestsChart" class="chart-space"><p class="chart-empty">当前范围暂无请求记录</p></div></div>
+          <div class="tokens-panel"><div class="subsection-heading"><h3>Token 构成</h3><span id="cacheRatio" class="secondary-text">缓存率 —</span></div><div id="tokenComposition" class="token-composition"><p class="empty-inline">暂无上游 usage，无法统计 Token 构成。</p></div><div class="cost-note"><span>成本</span><strong>—</strong><p>暂无上游成本数据，暂不估算。</p></div></div>
+        </div>
+      </section>
+
+      <section class="panel token-trend-panel" aria-labelledby="tokenTrendHeading">
+        <div class="panel-header"><div><p class="eyebrow">用量趋势</p><h2 id="tokenTrendHeading">输入、输出与缓存</h2><p class="section-description">每个时间段的实际 Token。悬停或使用 Tab 查看精确数值。</p></div><span id="trendRangeLabel" class="subtle-tag">4 小时</span></div>
+        <div class="legend usage-trend-legend"><span><i class="usage-dot palette-0"></i>非缓存输入</span><span><i class="usage-dot palette-1"></i>缓存输入</span><span><i class="usage-dot palette-2"></i>输出</span><span><i class="usage-dot palette-3"></i>未完整拆分</span></div>
+        <div id="tokenTrendChart" class="usage-trend-chart"><p class="chart-empty">暂无上报用量</p></div><p id="tokenTrendReadout" class="trend-readout" role="status">灰色标记代表有请求但总 Token 未上报，不能视为零。</p>
+      </section>
+      <section class="usage-grid" aria-label="模型与账号用量">
+        <article class="panel model-usage-panel" aria-labelledby="modelsHeading">
+          <div class="panel-header"><div><p class="eyebrow">模型消耗</p><h2 id="modelsHeading">Token 用在了哪里</h2><p class="section-description" id="usageCoverage">正在读取模型统计</p></div><div class="range-control" role="group" aria-label="模型排行指标"><button type="button" class="range-button active" data-usage-rank="tokens" aria-pressed="true">Token</button><button type="button" class="range-button" data-usage-rank="requests" aria-pressed="false">请求数</button></div></div>
+          <div class="usage-highlights"><div><span>已记录总 Token</span><strong id="usageTotal">—</strong></div><div><span>使用模型</span><strong id="usageModelCount">—</strong></div><div><span>用量完整率</span><strong id="usageCoverageRate">—</strong></div></div>
+          <div class="table-scroll"><table class="model-usage-table"><caption class="sr-only">模型、请求数与上游上报的 Token 用量。点击模型可查看请求记录。</caption><thead><tr><th scope="col">模型 / 实际上游</th><th scope="col" class="numeric">请求</th><th scope="col" class="numeric">输入</th><th scope="col" class="numeric">输出</th><th scope="col" class="numeric usage-total-column">总 Token</th></tr></thead><tbody id="modelUsageRows"><tr><td colspan="5" class="empty-cell">当前范围暂无模型记录</td></tr></tbody></table></div>
+          <p class="usage-footnote">缓存 Token 属于输入，推理 Token 属于输出，不重复加到总数。缺少上报的用量标为“未上报”。</p>
+        </article>
+        <article class="panel account-usage-panel" aria-labelledby="distributionHeading">
+          <div class="panel-header"><div><p class="eyebrow">线路与账号</p><h2 id="distributionHeading">消耗分布</h2><p class="section-description">Axon 独立线路与 AgentRouter 号池分开统计。</p></div></div>
+          <div class="usage-donut-wrap"><div id="usageDonut" class="usage-donut" role="img" aria-label="暂无用量记录"></div><div><p class="metric-label">统计范围</p><strong id="distributionRange">4 小时</strong><p class="secondary-text">仅统计已上报总 Token</p></div></div>
+          <div id="accountUsageRows" class="distribution-list"><p class="empty-inline">当前范围暂无账号用量</p></div>
+        </article>
+      </section>
+
+      <section class="panel request-history-panel" aria-labelledby="requestHistoryHeading">
+        <div class="panel-header"><div><p class="eyebrow">请求记录</p><h2 id="requestHistoryHeading">每次调用，一目了然</h2><p class="section-description">查看实际模型、所用账号和 Token 明细。点击“详情”查看缓存、推理和重试信息。</p></div><span id="requestHistoryCount" class="subtle-tag">正在读取</span></div>
+        <div class="request-filters">
+          <label>模型<select id="requestModel"><option value="">全部模型</option></select></label>
+          <label>线路 / 账号<select id="requestAccount"><option value="">全部线路与账号</option></select></label>
+          <label>结果<select id="requestStatus"><option value="all">全部结果</option><option value="success">成功</option><option value="failed">失败 / 中断</option></select></label>
+          <label>用量<select id="requestUsage"><option value="all">全部用量</option><option value="reported">已上报总 Token</option><option value="missing">总 Token 未上报</option></select></label>
+          <button id="resetRequestFilters" class="button quiet" type="button">清除筛选</button>
+        </div>
+        <p id="requestHistoryError" class="request-history-error" role="alert" hidden></p>
+        <div class="table-scroll"><table class="request-log-table"><caption class="sr-only">按时间倒序排列的模型调用记录与实际 Token 消耗</caption><thead><tr><th scope="col">时间 / 结果</th><th scope="col">模型</th><th scope="col">线路 / 账号</th><th scope="col" class="numeric">输入</th><th scope="col" class="numeric">输出</th><th scope="col" class="numeric">总 Token</th><th scope="col" class="numeric">耗时</th><th scope="col"><span class="sr-only">详情</span></th></tr></thead><tbody id="requestHistoryRows"><tr><td colspan="8" class="empty-cell">正在读取请求记录</td></tr></tbody></table></div>
+        <div class="request-pagination"><p id="requestPageLabel" role="status" aria-live="polite">—</p><div><button id="requestPreviousPage" class="button" type="button" disabled>上一页</button><button id="requestNextPage" class="button" type="button" disabled>下一页</button></div></div>
+        <p class="usage-footnote">请求通过本机网关完成后记入历史。绕过网关的调用和未上报的用量无法补算；重试的中间尝试不单独计量。这里不保存提问、回复或 API Key。</p>
+      </section>
+
+      <section class="panel history-panel" aria-labelledby="historyHeading">
+        <div class="panel-header"><div><h2 id="historyHeading">余额与签到历史</h2><p class="section-description">保留每次签到后的余额快照，方便追踪额度变化。</p></div><span id="historyCount" class="subtle-tag">暂无记录</span></div>
+        <div class="balance-history"><div class="subsection-heading"><h3>已确认余额趋势</h3><span class="secondary-text">USD · 部分确认的记录也会单独标注</span></div><div id="balanceChart" class="chart-space balance-chart-space"><p class="chart-empty">首次签到完成后，这里会显示余额记录。</p></div></div>
+        <div class="table-scroll"><table class="history-table"><caption class="sr-only">每次签到的时间、结果与确认余额</caption><thead><tr><th scope="col">完成时间</th><th scope="col">签到结果</th><th scope="col">余额已确认</th><th scope="col" class="numeric">确认总余额 · USD</th><th scope="col" class="numeric">耗时</th></tr></thead><tbody id="historyRows"><tr><td colspan="5" class="empty-cell">尚无签到历史</td></tr></tbody></table></div>
+      </section>
+
+      <footer class="footer"><p><span class="footer-dot" aria-hidden="true"></span>仅在当前 Windows 电脑上运行</p><p>面板入口：在网关目录双击 <strong>打开网关.cmd</strong>。若页面未打开，请检查本机网关是否正在运行。</p><p id="serviceVersion" class="mono">—</p></footer>
+    </main>
+  </div>
+  <noscript><p class="noscript-message">请启用 JavaScript，以读取本机网关状态和签到余额。</p></noscript>
+</body>
+</html>

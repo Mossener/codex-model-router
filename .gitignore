@@ -1,0 +1,43 @@
+# Secrets and machine-local state. Nothing here belongs in a public repository.
+settings.json
+account-pool.json
+account-pool-backup-*.json
+settings-backup-*.json
+keys/
+*.key
+.env
+.env.*
+auth.json
+*.pid
+prepared-config.toml
+
+# Runtime output
+runtime/
+backup-before-activation/
+work/
+logs/
+*.log
+requests.jsonl
+requests-*.jsonl
+requests.previous.jsonl
+balance-history.json
+balance-query-history.json
+installed-models.json
+
+# Built by build.ps1
+CodexModelRouter.exe
+RouterToken.exe
+
+# Optional modern panel: a prebuilt bundle of the separate front-end project.
+web-axonhub/
+frontend/
+
+# Node
+node_modules/
+package-lock.json
+
+# Editors and OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

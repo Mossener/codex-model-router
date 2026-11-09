@@ -1,0 +1,56 @@
+{
+  "port": 18179,
+  "taskName": "CodexModelGateway",
+  "instanceId": "00000000-0000-0000-0000-000000000000",
+  "routerVersion": 3,
+  "defaultModel": "gpt-6.1-sol",
+  "defaultBaseUrl": "https://your-upstream.example/v1",
+  "authPath": "C:\\Users\\you\\.codex\\auth.json",
+  "configPath": "C:\\Users\\you\\.codex\\config.toml",
+  "catalogPath": "installed-models.json",
+  "activeCatalogPath": "installed-models.json",
+  "nodePath": "runtime\\node.exe",
+  "backupDirectory": "backup-before-activation",
+
+  "opencodeBaseUrl": "https://opencode.ai/inference/go/openai/v1",
+  "opencodeKeyPath": "keys\\opencode.key",
+  "opencodeModels": {
+    "deepseek-v4.1-flash-oc": "deepseek-v4.1-flash",
+    "deepseek-v4.1-flash": "deepseek-v4.1-flash"
+  },
+
+  "agentrouterBaseUrl": "https://agentrouter.org/v1",
+  "agentrouterKeyPath": "keys\\agentrouter.key",
+  "agentrouterAccountsPath": "account-pool.json",
+  "agentrouterProxy": "http://127.0.0.1:10808",
+  "agentrouterUserAgent": "codex_cli_rs/0.61.2",
+  "agentrouterModels": {
+    "gpt-6-astra-ar": "gpt-6-astra",
+    "gpt-5.6-sol-ar": "gpt-5.6-sol",
+    "gpt-6.1-sol-ar": "gpt-6.1-sol"
+  },
+  "agentrouterPool": {
+    "ttlMs": 86400000,
+    "maxEntries": 10000,
+    "cooldownMs": 1800000
+  },
+
+  "geminiBaseUrl": "https://generativelanguage.googleapis.com/v1beta/openai",
+  "geminiKeyPath": "keys\\gemini.key",
+  "geminiProxy": "http://127.0.0.1:10808",
+  "geminiModels": {
+    "gemini-2.5-flash": "gemini-2.5-flash",
+    "gemini-flash-latest": "gemini-flash-latest"
+  },
+  "geminiEfforts": {
+    "gemini-2.5-flash": ["low", "medium", "high"]
+  },
+
+  "antigravityBaseUrl": "http://127.0.0.1:8045/v1",
+  "antigravityKeyPath": "keys\\antigravity.key",
+  "antigravityLocalWithoutKey": false,
+  "antigravityModels": {},
+
+  "dashboardEnabled": true,
+  "checkInDirectory": ""
+}
