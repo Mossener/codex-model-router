@@ -1,4 +1,4 @@
-# codex-model-router
+﻿# codex-model-router
 
 [中文](#中文文档) · [English](#english)
 
@@ -7,15 +7,15 @@
 它最初是为了解决一个很具体的问题：**Codex 每一轮都会把整段对话重新上传**，于是长会话会依次撞上三个墙 —— 客户端的内存量、本地网关的读入上限、上游 nginx 的 `client_max_body_size`。这个项目把这三层都处理掉了，并且保证错误尽量不落到上游那边。
 
 ```
-Codex CLI ──► 127.0.0.1:18179 (router.mjs)
-                 │
-                 ├─ original     → 你自己配置的默认上游（原样透传）
-                 ├─ opencode     → opencode.ai
-                 ├─ agentrouter  → agentrouter.org（多账号号池，自动轮转/冷却）
-                 ├─ gemini       → Google Gemini（Responses ⇄ chat/completions 双向翻译）
-                 └─ antigravity  → 本机 Antigravity Manager
-             ▲
-             └── RouterHost.exe（看门狗 + 托盘，崩溃自动拉起）
+Codex CLI  -->  http://127.0.0.1:18179/v1   (router.mjs)
+                    |
+                    +-- original      -> default upstream, passed through unchanged
+                    +-- opencode      -> opencode.ai
+                    +-- agentrouter   -> agentrouter.org  (account pool, rotates on failure)
+                    +-- gemini        -> Google Gemini    (Responses <-> chat/completions)
+                    +-- antigravity   -> local Antigravity Manager
+             ^
+             +-- RouterHost.exe  (watchdog + tray icon, restarts a dead worker)
 ```
 
 ## 中文文档
@@ -36,7 +36,7 @@ router.mjs              路由核心：鉴权、路由、账号池调度、重�
 dashboard.mjs           用量面板的 HTTP 层与统计接口
 account-pool.mjs        账号池：轮转、线程绑定、冷却、退避
 account-settings.mjs    账号启用/停用的持久化
-gemini.mjs              Responses ⇄ chat/completions 翻译与流式事件转换
+gemini.mjs              Responses 与 chat/completions 翻译与流式事件转换
 image-shrink.mjs        PNG 解码 / 缩放 / 重编码（无依赖）
 response-observer.mjs   流式响应观察：用量、终态事件、失败分类
 prefix-reuse.mjs        提示词前缀复用度量（缓存命中率解释）
